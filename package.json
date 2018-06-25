@@ -4,7 +4,10 @@
   "description": "Another pubg api wrapper",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc mocha --timeout=3000 .",
+    "lint": "./node_modules/.bin/eslint *.js",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "prepublishOnly": "npm run test && npm run lint"
   },
   "dependencies": {
     "clean-cache": "^1.0.1"
@@ -15,7 +18,9 @@
     "chai": "^4.1.2",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.12.0"
+    "eslint-plugin-import": "^2.12.0",
+    "istanbul": "^0.4.5",
+    "nyc": "^12.0.2"
   },
   "repository": {
     "type": "git",
