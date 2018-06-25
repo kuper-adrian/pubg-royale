@@ -7,6 +7,37 @@
  * 'pc-na'.
  */
 
+/**
+ * Options object for player request. Either "id" or "name" property is required. Omitting
+ * both causes a rejected promise. If both are specified the id will be used.
+ * @typedef {Object} PlayerOptions
+ * @property {string} region Region used for finding player. If omitted, client default will be
+ * used.
+ * @property {string} id Pubg api player id used for finding player.
+ * @property {string} name Pubg player name used for finding player.
+ */
+
+/**
+ * Options object for player statistics request.
+ * @typedef {Object} PlayerStatsOptions
+ * @property {string} region Region of player. If omitted, client default is used.
+ * @property {string} playerId Pubg api player id. Required.
+ * @property {string} seasonId Pubg api season id. Required.
+ */
+
+/**
+ * Options object for seasons request.
+ * @typedef {Object} SeasonsOptions
+ * @property {string} region Region used to get seasons. If omitted, client default is used.
+ */
+
+/**
+ * Options object for match request.
+ * @typedef {Object} MatchOptions
+ * @property {string} region Region used to get match. If omitted, client default is used.
+ * @property {string} id Pubg api match id. Required.
+ */
+
 const https = require('https');
 const { Cache } = require('clean-cache');
 
@@ -32,21 +63,19 @@ const REGIONS = {
   },
 };
 
-// TODO make ttls configurable
-const playerByIdCache = new Cache(120 * 1000);
-const playerByNameCache = new Cache(1200 * 1000);
-const statusCache = new Cache(60 * 1000);
-const seasonsCache = new Cache(3600 * 1000);
-const playerStatsCache = new Cache(600 * 1000);
-const matchByIdCache = new Cache(300 * 1000);
-
-function getApiOptions(path) {
+/**
+ * Creates HTTP request options for api call.
+ *
+ * @param {string} apiKey pubg api key
+ * @param {string} path sub url path for api request
+ */
+function getApiOptions(apiKey, path) {
   return {
     path,
     hostname: PUBG_API_HOST_NAME,
     method: 'GET',
     headers: {
-      Authorization: `Bearer ${TODO}`, // TODO
+      Authorization: `Bearer ${apiKey}`,
       Accept: 'application/vnd.api+json',
     },
   };
@@ -59,35 +88,41 @@ function getApiOptions(path) {
  * @param {Function} reject Callback that is called, when an error occures
  * @param {Cache} cache Cache to store results in.
  */
-function apiRequest(options, resolve, reject, cache) {
+function apiRequest(options, cache, resolve, reject) {
+  // first, check whether there already is the requested object in cache
   const cachedObject = cache.retrieve(options.path);
   if (cachedObject !== null) {
     if (cachedObject instanceof Error) {
+      // reject promise if request caused error previously
       reject(cachedObject);
     } else {
+      // resolve the request with cached object
       resolve(cachedObject);
     }
   } else {
+    // ... no cached object, so start the http get request
     https.get(options, (resp) => {
       let data = '';
 
-      // A chunk of data has been recieved.
+      // a chunk of data has been recieved.
       resp.on('data', (chunk) => {
         data += chunk;
       });
 
-      // The whole response has been received.
+      // the whole response has been received.
       resp.on('end', () => {
         const apiData = JSON.parse(data);
 
+        // if an api error object was received...
         if (apiData.errors !== undefined && apiData.errors.length > 0) {
+          // ...gather error info...
           let errorMessage = apiData.errors[0].title;
           if (apiData.errors[0].detail !== undefined) {
             errorMessage += `. Details: ${apiData.errors[0].detail}`;
           }
+          // ... and reject promise with proper error
           const apiError = new Error(errorMessage);
           cache.add(options.path, apiError);
-
           reject(apiError);
         } else {
           cache.add(options.path, apiData);
@@ -110,122 +145,151 @@ class PubgRoyaleClient {
    * @param {ClientOptions} options object to customize behaviour
    */
   constructor(options) {
+    if (options.key === undefined || options.key === null) {
+      throw new Error('Api key must be specified');
+    } else {
+      this.apiKey = options.key;
+    }
+
     if (options.defaultRegion !== undefined) {
       this.defaultRegion = options.defaultRegion;
     } else {
       this.defaultRegion = REGIONS.PC.NA;
     }
+
+    // TODO make ttl configurable through options
+    const ttl = 10 * 1000;
+
+    this.playerCache = new Cache(ttl);
+    this.playerStatsCache = new Cache(ttl);
+    this.statusCache = new Cache(ttl);
+    this.seasonsCache = new Cache(ttl);
+    this.matchCache = new Cache(ttl);
   }
 
+  /**
+   * Creates a promise to get PUBG api info about player
+   * @param {PlayerOptions} options Options for api call.
+   */
   player(options) {
     let region = '';
-    let id = '';
-    let name = '';
 
     if (options.region !== undefined) {
-      region = options.region;
+      ({ region } = options);
     } else {
       region = this.defaultRegion;
     }
 
-    if (options.id !== undefined) {
-      id = options.id;
-    } else if (options.name !== undefined) {
-      
+    if (options.id === undefined && options.name === undefined) {
+      return Promise.reject(new Error('No player id or name specified through "id" or "name" option'));
     }
-    // TODO
-  }
 
-  playerStats(options) {
-    // TODO
-  }
+    if (options.id !== undefined) {
+      return new Promise((resolve, reject) => {
+        const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/players/${options.id}`);
+        return apiRequest(apiOptions, this.playerCache, resolve, reject);
+      });
+    }
 
-  status() {
+    // use name instead
     return new Promise((resolve, reject) => {
-      const options = getApiOptions('/status');
-      return apiRequest(options, resolve, reject, statusCache);
+      const apiOptions = getApiOptions(
+        this.apiKey,
+        `/shards/${region}/players?filter[playerNames]=${options.name}`,
+      );
+      return apiRequest(apiOptions, this.playerCache, resolve, reject);
     });
   }
 
-  seasons(options) {
-    // TODO
+  /**
+   * Creates a promise to get the lifetime stats of a player during the given season.
+   * @param {PlayerStatsOptions} options Options for api call.
+   */
+  playerStats(options) {
+    let region = '';
+    let playerId = '';
+    let seasonId = '';
+
+    if (options.region !== undefined) {
+      ({ region } = options);
+    } else {
+      region = this.defaultRegion;
+    }
+
+    if (options.playerId === undefined) {
+      return Promise.reject(new Error('No player id specified through "playerId" option'));
+    }
+    if (options.seasonId === undefined) {
+      return Promise.reject(new Error('No season id specified through "seasonId" option'));
+    }
+    ({ playerId, seasonId } = options);
+
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(
+        this.apiKey,
+        `/shards/${region}/players/${playerId}/seasons/${seasonId}`,
+      );
+      apiRequest(apiOptions, this.playerStatsCache, resolve, reject);
+    });
   }
 
+  /**
+   * Creates a promise to get the current status of the pubg api.
+   */
+  status() {
+    return new Promise((resolve, reject) => {
+      const options = getApiOptions(this.apiKey, '/status');
+      return apiRequest(options, this.statusCache, resolve, reject);
+    });
+  }
+
+  /**
+   * Creates a promise to get all seasons.
+   *
+   * @param {SeasonsOptions} options Options for api call.
+   */
+  seasons(options) {
+    let region = '';
+
+    if (options.region !== undefined) {
+      ({ region } = options);
+    } else {
+      region = this.defaultRegion;
+    }
+
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/seasons`);
+      return apiRequest(apiOptions, this.seasonsCache, resolve, reject);
+    });
+  }
+
+  /**
+   * Creates a promise to get infos about match identified by the
+   * given id.
+   *
+   * @param {MatchOptions} options Options for api call.
+   */
   match(options) {
-    // TODO
+    let region = '';
+    let matchId = '';
+
+    if (options.region !== undefined) {
+      ({ region } = options);
+    } else {
+      region = this.defaultRegion;
+    }
+
+    if (options.id === undefined) {
+      return Promise.reject(new Error('No match id specified through "id" option'));
+    }
+    ({ id: matchId } = options);
+
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/matches/${matchId}`);
+      apiRequest(apiOptions, this.matchCache, resolve, reject);
+    });
   }
 }
-
-/**
- * Creates a promise to get PUBG API info about player
- *
- * @param {string} name pubg player name
- */
-exports.playerByName = function playerByName(name, region) {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions(`/shards/${region}/players?filter[playerNames]=${name}`);
-    return apiRequest(options, resolve, reject, playerByNameCache);
-  });
-};
-
-/**
- * Creates a promise to get PUBG api info about player
- *
- * @param {string} id pubg id of player
- */
-exports.playerById = function playerById(id, region) {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions(`/shards/${region}/players/${id}`);
-    return apiRequest(options, resolve, reject, playerByIdCache);
-  });
-};
-
-/**
- * Creates a promise to get the current status of the pubg api
- */
-exports.status = function status() {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions('/status');
-    return apiRequest(options, resolve, reject, statusCache);
-  });
-};
-
-/**
- * Creates a promise to get all seasons.
- */
-exports.seasons = function seasons(region) {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions(`/shards/${region}/seasons`);
-    return apiRequest(options, resolve, reject, seasonsCache);
-  });
-};
-
-/**
- * Creates a promise to get the lifetime stats of a player during the given season.
- *
- * @param {string} pubgId PUBG API Id of player
- * @param {string} seasonId PUBG API Id of season
- */
-exports.playerStats = function playerStats(pubgId, seasonId, region) {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions(`/shards/${region}/players/${pubgId}/seasons/${seasonId}`);
-    apiRequest(options, resolve, reject, playerStatsCache);
-  });
-};
-
-/**
- * Creates a promise to get infos about match identified by the
- * given id.
- *
- * @param {string} matchId the match id
- */
-exports.matchById = function matchById(matchId, region) {
-  return new Promise((resolve, reject) => {
-    const options = getApiOptions(`/shards/${region}/matches/${matchId}`);
-    apiRequest(options, resolve, reject, matchByIdCache);
-  });
-};
-
 
 exports.Client = PubgRoyaleClient;
 exports.REGIONS = REGIONS;
