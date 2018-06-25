@@ -1,0 +1,25 @@
+{
+  "name": "pubg-royale",
+  "version": "1.0.0",
+  "description": "Another pubg api wrapper",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kuper-adrian/pubg-royale.git"
+  },
+  "keywords": [
+    "pubg",
+    "api",
+    "wrapper",
+    "battle-royale"
+  ],
+  "author": "Adrian Kuper",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kuper-adrian/pubg-royale/issues"
+  },
+  "homepage": "https://github.com/kuper-adrian/pubg-royale#readme"
+}
