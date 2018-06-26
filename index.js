@@ -1,10 +1,22 @@
 /* eslint class-methods-use-this: "off" */
 
 /**
- * @typedef {Object} ClientOptions
+ * Options object to specify ttl for cached objects.
+ * @typedef {Object} CacheOptions
+ * @property {number} player ttl in ms for player objects to be cached
+ * @property {number} playerStats ttl in ms for player statistic objects to be cached
+ * @property {number} seasons ttl in ms for seasons objects to be cached
+ * @property {number} status ttl in ms for status objects to be cached
+ * @property {number} match ttl in ms for match objects to be cached
+ */
+
+/**
+ * Options object for pubg api client constructor.
+ * @typedef {Object} PubgRoyaleClientOptions
  * @property {string} key Your PUBG API key. Required.
  * @property {string} defaultRegion Default region used for api request. If omitted, defaults to
  * 'pc-na'.
+ * @property {CacheOptions} cache Object to configure ttl for cached objects.
  */
 
 /**
@@ -65,7 +77,6 @@ const REGIONS = {
 
 /**
  * Creates HTTP request options for api call.
- *
  * @param {string} apiKey pubg api key
  * @param {string} path sub url path for api request
  */
@@ -82,11 +93,11 @@ function getApiOptions(apiKey, path) {
 }
 
 /**
- *
+ * Makes api request. Caches objects based on requested path.
  * @param {Object} options Request options object
  * @param {Function} resolve Callback that is called, when the api request succeeded
  * @param {Function} reject Callback that is called, when an error occures
- * @param {Cache} cache Cache to store results in.
+ * @param {Cache} cache Cache to store and retrieve results.
  */
 function apiRequest(options, cache, resolve, reject) {
   // first, check whether there already is the requested object in cache
@@ -142,7 +153,7 @@ function apiRequest(options, cache, resolve, reject) {
 class PubgRoyaleClient {
   /**
    * Constructor
-   * @param {ClientOptions} options object to customize behaviour
+   * @param {PubgRoyaleClientOptions} options object to customize behaviour
    */
   constructor(options) {
     if (options.key === undefined || options.key === null) {
@@ -157,14 +168,47 @@ class PubgRoyaleClient {
       this.defaultRegion = REGIONS.PC.NA;
     }
 
-    // TODO make ttl configurable through options
-    const ttl = 10 * 1000;
+    const defaultTtl = 10 * 1000;
 
-    this.playerCache = new Cache(ttl);
-    this.playerStatsCache = new Cache(ttl);
-    this.statusCache = new Cache(ttl);
-    this.seasonsCache = new Cache(ttl);
-    this.matchCache = new Cache(ttl);
+    if (options.cache !== undefined) {
+      const { cache: cacheSettings } = options;
+
+      if (cacheSettings.player !== undefined) {
+        this.playerCache = new Cache(cacheSettings.player);
+      } else {
+        this.playerCache = new Cache(defaultTtl);
+      }
+
+      if (cacheSettings.playerStats !== undefined) {
+        this.playerStatsCache = new Cache(cacheSettings.playerStats);
+      } else {
+        this.playerStatsCache = new Cache(defaultTtl);
+      }
+
+      if (cacheSettings.status !== undefined) {
+        this.statusCache = new Cache(cacheSettings.status);
+      } else {
+        this.statusCache = new Cache(defaultTtl);
+      }
+
+      if (cacheSettings.seasons !== undefined) {
+        this.seasonsCache = new Cache(cacheSettings.seasons);
+      } else {
+        this.seasonsCache = new Cache(defaultTtl);
+      }
+
+      if (cacheSettings.match !== undefined) {
+        this.matchCache = new Cache(cacheSettings.match);
+      } else {
+        this.matchCache = new Cache(defaultTtl);
+      }
+    } else {
+      this.playerCache = new Cache(defaultTtl);
+      this.playerStatsCache = new Cache(defaultTtl);
+      this.statusCache = new Cache(defaultTtl);
+      this.seasonsCache = new Cache(defaultTtl);
+      this.matchCache = new Cache(defaultTtl);
+    }
   }
 
   /**
@@ -245,7 +289,6 @@ class PubgRoyaleClient {
 
   /**
    * Creates a promise to get all seasons.
-   *
    * @param {SeasonsOptions} options Options for api call.
    */
   seasons(options) {
@@ -266,7 +309,6 @@ class PubgRoyaleClient {
   /**
    * Creates a promise to get infos about match identified by the
    * given id.
-   *
    * @param {MatchOptions} options Options for api call.
    */
   match(options) {
