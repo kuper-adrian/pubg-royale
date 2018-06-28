@@ -8,7 +8,7 @@ This is a PUBG API wrapper for Node.js with built-in caching that originated fro
 * API results are automatically parsed to Javascript objects.
 * API errors are converted to native Javascript errors for easier error handling.
 
-Telemetry data is missing for the moment, but might be added in the future. The composistion of the objects returned by `pubg-royle` match the JSON returned by the PUBG API. So be sure to read the relevant parts of the official [docs](https://documentation.playbattlegrounds.com/en/introduction.html).
+Telemetry data is missing for the moment, but might be added in the future. The composition of the objects returned by `pubg-royle` match the JSON returned by the PUBG API. So be sure to read the relevant parts of the official [docs](https://documentation.playbattlegrounds.com/en/introduction.html).
 
 ## Install
 ```
