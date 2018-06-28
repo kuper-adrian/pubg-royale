@@ -1,10 +1,10 @@
 .nyc_output
 node_modules/
 
+.eslintrc.js
 .gitattributes
 .gitignore
 .npmignore
 
 playground.js
-index.test.js
 package-lock.json
