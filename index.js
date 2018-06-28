@@ -156,6 +156,10 @@ class PubgRoyaleClient {
    * @param {PubgRoyaleClientOptions} options object to customize behaviour
    */
   constructor(options) {
+    if (options === undefined) {
+      throw new Error('No options parameter specified.');
+    }
+
     if (options.key === undefined || options.key === null) {
       throw new Error('Api key must be specified');
     } else {
@@ -168,7 +172,7 @@ class PubgRoyaleClient {
       this.defaultRegion = REGIONS.PC.NA;
     }
 
-    const defaultTtl = 10 * 1000;
+    const defaultTtl = 60 * 1000;
 
     if (options.cache !== undefined) {
       const { cache: cacheSettings } = options;
