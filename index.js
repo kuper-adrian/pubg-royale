@@ -219,6 +219,10 @@ class PubgRoyaleClient {
   player(options) {
     let region = '';
 
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for player api request'));
+    }
+
     if (options.region !== undefined) {
       ({ region } = options);
     } else {
@@ -255,6 +259,10 @@ class PubgRoyaleClient {
     let region = '';
     let playerId = '';
     let seasonId = '';
+
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for player stats api request'));
+    }
 
     if (options.region !== undefined) {
       ({ region } = options);
@@ -298,7 +306,9 @@ class PubgRoyaleClient {
   seasons(options) {
     let region = '';
 
-    if (options.region !== undefined) {
+    if (options === undefined) {
+      region = this.defaultRegion;
+    } else if (options.region !== undefined) {
       ({ region } = options);
     } else {
       region = this.defaultRegion;
@@ -319,6 +329,10 @@ class PubgRoyaleClient {
   match(options) {
     let region = '';
     let matchId = '';
+
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for match api request'));
+    }
 
     if (options.region !== undefined) {
       ({ region } = options);
