@@ -148,6 +148,17 @@ function apiRequest(options, cache, resolve, reject) {
 }
 
 /**
+ * Tidies all given caches.
+ * @param {Array} caches Array of caches to tidy
+ */
+async function tidyCaches(caches) {
+  for (let index = 0; index < caches.length; index += 1) {
+    const cache = caches[index];
+    cache.tidy();
+  }
+}
+
+/**
  * Client class for access to pubg api.
  */
 class PubgRoyaleClient {
@@ -209,6 +220,18 @@ class PubgRoyaleClient {
       this.seasonsCache = new Cache(defaultTtl);
       this.matchCache = new Cache(defaultTtl);
     }
+
+    // clean caches periodically
+    setInterval(
+      tidyCaches([
+        this.playerCache,
+        this.playerStatsCache,
+        this.statusCache,
+        this.seasonsCache,
+        this.matchCache,
+      ]),
+      60 * 1000, // every minute
+    );
   }
 
   /**
