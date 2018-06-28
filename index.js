@@ -148,17 +148,6 @@ function apiRequest(options, cache, resolve, reject) {
 }
 
 /**
- * Tidies all given caches.
- * @param {Array} caches Array of caches to tidy
- */
-async function tidyCaches(caches) {
-  for (let index = 0; index < caches.length; index += 1) {
-    const cache = caches[index];
-    cache.tidy();
-  }
-}
-
-/**
  * Client class for access to pubg api.
  */
 class PubgRoyaleClient {
@@ -220,23 +209,12 @@ class PubgRoyaleClient {
       this.seasonsCache = new Cache(defaultTtl);
       this.matchCache = new Cache(defaultTtl);
     }
-
-    // clean caches periodically
-    setInterval(
-      tidyCaches([
-        this.playerCache,
-        this.playerStatsCache,
-        this.statusCache,
-        this.seasonsCache,
-        this.matchCache,
-      ]),
-      60 * 1000, // every minute
-    );
   }
 
   /**
    * Creates a promise to get PUBG api info about player
    * @param {PlayerOptions} options Options for api call.
+   * @returns {Promise} Promise to get player
    */
   player(options) {
     let region = '';
@@ -271,6 +249,7 @@ class PubgRoyaleClient {
   /**
    * Creates a promise to get the lifetime stats of a player during the given season.
    * @param {PlayerStatsOptions} options Options for api call.
+   * @returns {Promise} Promise to get player stats.
    */
   playerStats(options) {
     let region = '';
@@ -302,6 +281,7 @@ class PubgRoyaleClient {
 
   /**
    * Creates a promise to get the current status of the pubg api.
+   * @returns {Promise} Promise to get api status
    */
   status() {
     return new Promise((resolve, reject) => {
@@ -313,6 +293,7 @@ class PubgRoyaleClient {
   /**
    * Creates a promise to get all seasons.
    * @param {SeasonsOptions} options Options for api call.
+   * @returns {Promise} Promise to get seasons
    */
   seasons(options) {
     let region = '';
@@ -333,6 +314,7 @@ class PubgRoyaleClient {
    * Creates a promise to get infos about match identified by the
    * given id.
    * @param {MatchOptions} options Options for api call.
+   * @returns {Promise} Promise to get match
    */
   match(options) {
     let region = '';
