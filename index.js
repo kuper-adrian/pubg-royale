@@ -38,6 +38,14 @@
  */
 
 /**
+ * Options object for Telemetry.
+ * @typedef {Object} TelemetryOptions
+ * @property {string} region Region of player. If omitted, client default is used.
+ * @property {string} matchId Id obtained from player() which has this format 1ad97f85-cf9b-11e7-b84e-0a586460f004. Required 
+ */
+
+
+/**
  * Options object for seasons request.
  * @typedef {Object} SeasonsOptions
  * @property {string} region Region used to get seasons. If omitted, client default is used.
@@ -48,6 +56,12 @@
  * @typedef {Object} MatchOptions
  * @property {string} region Region used to get match. If omitted, client default is used.
  * @property {string} id Pubg api match id. Required.
+ */
+
+/**
+ * Options for getting telemetry URL
+ * @typedef {Object} TelemetryURLOptions
+ * @property {JSON} jsonResponse returned value from telemetry()
  */
 
 const https = require('https');
@@ -255,6 +269,38 @@ class PubgRoyaleClient {
   }
 
   /**
+   * Creates a promise to get some telemetry info.
+   * @param {TelemetryOptions} options Options for api call.
+   * @returns {Promise} Promise to get player stats.
+   */
+    telemetry(options) {
+      let region = '';
+
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for telemetry api request'));
+    }
+
+    if (options.region !== undefined) {
+      ({ region } = options);
+    } else {
+      region = this.defaultRegion;
+    }
+
+    if(options.matchId === undefined){
+      return Promise.reject(new Error('No "matchId" passed as an option'));
+    }
+
+    // Using matchId
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(
+        this.apiKey,
+        `/shards/${region}/matches/${options.matchId}`,
+      );
+      return apiRequest(apiOptions, this.playerCache, resolve, reject);
+    });
+    }
+
+  /**
    * Creates a promise to get the lifetime stats of a player during the given season.
    * @param {PlayerStatsOptions} options Options for api call.
    * @returns {Promise} Promise to get player stats.
@@ -353,6 +399,19 @@ class PubgRoyaleClient {
       const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/matches/${matchId}`);
       apiRequest(apiOptions, this.matchCache, resolve, reject);
     });
+  }
+  /**
+   * Returns the json file URL from telemetry
+   * Use it after calling telemetry() in your code
+   * @param {JSON} jsonReturned 
+   * @returns {String} Telemetry file URL 
+   */
+  getTelemetryURL(jsonReturned){
+    let a = jsonReturned.included.filter((val, index, arr) => {
+      if(val.type == "asset")
+          return arr;
+    });
+    return a[0].attributes.URL;
   }
 }
 
