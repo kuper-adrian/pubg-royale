@@ -41,7 +41,8 @@
  * Options object for Telemetry.
  * @typedef {Object} TelemetryOptions
  * @property {string} region Region of player. If omitted, client default is used.
- * @property {string} matchId Id obtained from player() which has this format 1ad97f85-cf9b-11e7-b84e-0a586460f004. Required 
+ * @property {string} matchId Id obtained from player() which has this format
+ * "1ad97f85-cf9b-11e7-b84e-0a586460f004". Required
  */
 
 
@@ -273,8 +274,8 @@ class PubgRoyaleClient {
    * @param {TelemetryOptions} options Options for api call.
    * @returns {Promise} Promise to get player stats.
    */
-    telemetry(options) {
-      let region = '';
+  telemetry(options) {
+    let region = '';
 
     if (options === undefined) {
       return Promise.reject(new Error('No options parameter defined for telemetry api request'));
@@ -286,7 +287,7 @@ class PubgRoyaleClient {
       region = this.defaultRegion;
     }
 
-    if(options.matchId === undefined){
+    if (options.matchId === undefined) {
       return Promise.reject(new Error('No "matchId" passed as an option'));
     }
 
@@ -298,7 +299,7 @@ class PubgRoyaleClient {
       );
       return apiRequest(apiOptions, this.playerCache, resolve, reject);
     });
-    }
+  }
 
   /**
    * Creates a promise to get the lifetime stats of a player during the given season.
@@ -400,18 +401,24 @@ class PubgRoyaleClient {
       apiRequest(apiOptions, this.matchCache, resolve, reject);
     });
   }
+
   /**
    * Returns the json file URL from telemetry
    * Use it after calling telemetry() in your code
-   * @param {JSON} jsonReturned 
-   * @returns {String} Telemetry file URL 
+   * @param {JSON} jsonReturned
+   * @returns {String} Telemetry file URL
    */
-  getTelemetryURL(jsonReturned){
-    let a = jsonReturned.included.filter((val, index, arr) => {
-      if(val.type == "asset")
-          return arr;
+  getTelemetryURL(jsonReturned) {
+    const asset = jsonReturned.included.filter((val, index, arr) => {
+      if (val.type === 'asset') {
+        return arr;
+      }
+      return undefined;
     });
-    return a[0].attributes.URL;
+    if (asset !== undefined) {
+      return asset[0].attributes.URL;
+    }
+    return undefined;
   }
 }
 
