@@ -332,7 +332,7 @@ class PubgRoyaleClient {
     return new Promise((resolve, reject) => {
       const apiOptions = getApiOptions(
         this.apiKey,
-        `/shards/${region}/players/${playerId}/seasons/${seasonId}`,
+        `/shards/${region === REGIONS.PC.KAKAO ? 'kakao' : 'steam'}/players/${playerId}/seasons/${seasonId}`,
       );
       apiRequest(apiOptions, this.playerStatsCache, resolve, reject);
     });
