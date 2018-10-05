@@ -49,5 +49,10 @@ client.player({ name: 'JohnDoe' })
   });
 ```
 
+## Changelog
+
+### 1.1.0
+* Support for pubg api v6.0.0 style seasons stats url format (fixes #4)
+
 ## License
 MIT
