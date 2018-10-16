@@ -221,12 +221,26 @@ class PubgRoyaleClient {
       } else {
         this.matchCache = new Cache(defaultTtl);
       }
+
+      if (cacheSettings.tournaments !== undefined) {
+        this.tournamentsCache = new Cache(cacheSettings.tournaments);
+      } else {
+        this.tournamentsCache = new Cache(defaultTtl);
+      }
+
+      if (cacheSettings.tournament !== undefined) {
+        this.tournamentCache = new Cache(cacheSettings.tournament);
+      } else {
+        this.tournamentCache = new Cache(defaultTtl);
+      }
     } else {
       this.playerCache = new Cache(defaultTtl);
       this.playerStatsCache = new Cache(defaultTtl);
       this.statusCache = new Cache(defaultTtl);
       this.seasonsCache = new Cache(defaultTtl);
       this.matchCache = new Cache(defaultTtl);
+      this.tournamentsCache = new Cache(defaultTtl);
+      this.tournamentCache = new Cache(defaultTtl);
     }
   }
 
@@ -419,6 +433,42 @@ class PubgRoyaleClient {
       return asset[0].attributes.URL;
     }
     return undefined;
+  }
+
+  /**
+   * Creates a promise to get all tournaments.
+   * @param {TournamentsOptions} options Options for api call.
+   * @returns {Promise} Promise to get tournaments
+   */
+  tournaments() {
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(this.apiKey, '/tournaments');
+      return apiRequest(apiOptions, this.tournamentsCache, resolve, reject);
+    });
+  }
+
+  /**
+   * Creates a promise to get infos about a tournament identified
+   * by the given id.
+   * @param {TournamentOptions} options Options for api call.
+   * @returns {Promise} Promise to get tournament
+   */
+  tournament(options) {
+    let tournamentId = '';
+
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for tournament api request'));
+    }
+
+    if (options.id === undefined) {
+      return Promise.reject(new Error('No tournament id specified through "id" option'));
+    }
+    ({ id: tournamentId } = options);
+
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(this.apiKey, `/tournaments/${tournamentId}`);
+      apiRequest(apiOptions, this.tournamentCache, resolve, reject);
+    });
   }
 }
 
