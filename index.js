@@ -433,47 +433,31 @@ class PubgRoyaleClient {
       return asset[0].attributes.URL;
     }
     return undefined;
+  }
 
-/**
+  /**
    * Creates a promise to get all tournaments.
    * @param {TournamentsOptions} options Options for api call.
    * @returns {Promise} Promise to get tournaments
    */
-  tournaments(options) {
-    let region = '';
-
-    if (options === undefined) {
-      region = this.defaultRegion;
-    } else if (options.region !== undefined) {
-      ({ region } = options);
-    } else {
-      region = this.defaultRegion;
-    }
-
+  tournaments() {
     return new Promise((resolve, reject) => {
-      const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/tournaments`);
+      const apiOptions = getApiOptions(this.apiKey, '/tournaments');
       return apiRequest(apiOptions, this.tournamentsCache, resolve, reject);
     });
   }
 
   /**
-   * Creates a promise to get infos about a tournament identified 
+   * Creates a promise to get infos about a tournament identified
    * by the given id.
    * @param {TournamentOptions} options Options for api call.
    * @returns {Promise} Promise to get tournament
    */
   tournament(options) {
-    let region = '';
     let tournamentId = '';
 
     if (options === undefined) {
       return Promise.reject(new Error('No options parameter defined for tournament api request'));
-    }
-
-    if (options.region !== undefined) {
-      ({ region } = options);
-    } else {
-      region = this.defaultRegion;
     }
 
     if (options.id === undefined) {
@@ -482,13 +466,11 @@ class PubgRoyaleClient {
     ({ id: tournamentId } = options);
 
     return new Promise((resolve, reject) => {
-      const apiOptions = getApiOptions(this.apiKey, `/shards/${region}/tournaments/${tournamentId}`);
+      const apiOptions = getApiOptions(this.apiKey, `/tournaments/${tournamentId}`);
       apiRequest(apiOptions, this.tournamentCache, resolve, reject);
     });
   }
 }
-
-//
 
 exports.Client = PubgRoyaleClient;
 exports.REGIONS = REGIONS;
