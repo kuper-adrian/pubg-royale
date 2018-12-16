@@ -7,6 +7,7 @@ This is a PUBG API wrapper for Node.js with built-in caching that originated fro
 * Results are cached. Cache timings can be configured.
 * API results are automatically parsed to Javascript objects.
 * API errors are converted to native Javascript errors for easier error handling.
+* Works for PC regions "steam" and "kakao".
 
 The composition of the objects returned by `pubg-royle` match the JSON returned by the PUBG API. So be sure to read the relevant parts of the official [docs](https://documentation.playbattlegrounds.com/en/introduction.html).
 
@@ -25,9 +26,9 @@ const client = new pubgRoyale.Client({
   // Put your api key here
   key: 'YOUR_KEY_HERE',
 
-  // Default region used for api calls. Defaults to pc-na if omitted.
+  // Default region used for api calls. Defaults to "steam" if omitted.
   // The region can be set for individual api calls.
-  defaultRegion: pubgRoyale.REGIONS.PC.EU,
+  defaultRegion: pubgRoyale.REGIONS.PC.STEAM,
 
   // Specifies ttl in ms for cached objects. Any value ommited defaults to 60 seconds.
   // Set every value to zero to disable caching
@@ -55,6 +56,9 @@ client.player({ name: 'JohnDoe' })
 * Support for pubg api v6.0.0 style seasons stats url format (fixes [#4][i4])
 
 [i4]: https://github.com/kuper-adrian/pubg-royale/issues/4
+
+### 2.0.0
+* Support for new grouped PC regions "steam" and "kakao". Support for console regions dropped for now.
 
 ## License
 MIT

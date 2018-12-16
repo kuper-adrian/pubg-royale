@@ -68,25 +68,11 @@
 const https = require('https');
 const { Cache } = require('clean-cache');
 
-const PUBG_API_HOST_NAME = 'api.playbattlegrounds.com';
+const PUBG_API_HOST_NAME = 'api.pubg.com';
 const REGIONS = {
   PC: {
-    EU: 'pc-eu',
-    NA: 'pc-na',
-    RU: 'pc-ru',
-    OC: 'pc-oc',
-    KAKAO: 'pc-kakao',
-    SEA: 'pc-sea',
-    SA: 'pc-sa',
-    AS: 'pc-as',
-    JP: 'pc-jp',
-    KRJP: 'pc-krjp',
-  },
-  XBOX: {
-    EU: 'xbox-eu',
-    NA: 'xbox-na',
-    OC: 'xbox-oc',
-    AS: 'xbox-as',
+    STEAM: 'steam',
+    KAKAO: 'kakao',
   },
 };
 
@@ -184,7 +170,7 @@ class PubgRoyaleClient {
     if (options.defaultRegion !== undefined) {
       this.defaultRegion = options.defaultRegion;
     } else {
-      this.defaultRegion = REGIONS.PC.NA;
+      this.defaultRegion = REGIONS.PC.STEAM;
     }
 
     const defaultTtl = 60 * 1000;
@@ -346,7 +332,7 @@ class PubgRoyaleClient {
     return new Promise((resolve, reject) => {
       const apiOptions = getApiOptions(
         this.apiKey,
-        `/shards/${region === REGIONS.PC.KAKAO ? 'kakao' : 'steam'}/players/${playerId}/seasons/${seasonId}`,
+        `/shards/${region}/players/${playerId}/seasons/${seasonId}`,
       );
       apiRequest(apiOptions, this.playerStatsCache, resolve, reject);
     });
