@@ -38,6 +38,13 @@
  */
 
 /**
+ * Options object for player lifetime statistics request.
+ * @typedef {Object} PlayerLifetimeStatsOptions
+ * @property {string} region Region of player. If omitted, client default is used.
+ * @property {string} playerId Pubg api player id. Required.
+ */
+
+/**
  * Options object for Telemetry.
  * @typedef {Object} TelemetryOptions
  * @property {string} region Region of player. If omitted, client default is used.
@@ -302,7 +309,7 @@ class PubgRoyaleClient {
   }
 
   /**
-   * Creates a promise to get the lifetime stats of a player during the given season.
+   * Creates a promise to get the stats of a player during the given season.
    * @param {PlayerStatsOptions} options Options for api call.
    * @returns {Promise} Promise to get player stats.
    */
@@ -333,6 +340,39 @@ class PubgRoyaleClient {
       const apiOptions = getApiOptions(
         this.apiKey,
         `/shards/${region}/players/${playerId}/seasons/${seasonId}`,
+      );
+      apiRequest(apiOptions, this.playerStatsCache, resolve, reject);
+    });
+  }
+
+  /**
+   * Creates a promise to get the lifetime stats of the player.
+   * @param {PlayerLifetimeStatsOptions} options Options for api call
+   * @returns {Promise} Promise to get player lifetime stats.
+   */
+  lifetimeStats(options) {
+    let region = '';
+    let playerId = '';
+
+    if (options === undefined) {
+      return Promise.reject(new Error('No options parameter defined for player stats api request'));
+    }
+
+    if (options.region !== undefined) {
+      ({ region } = options);
+    } else {
+      region = this.defaultRegion;
+    }
+
+    if (options.playerId === undefined) {
+      return Promise.reject(new Error('No player id specified through "playerId" option'));
+    }
+    ({ playerId } = options);
+
+    return new Promise((resolve, reject) => {
+      const apiOptions = getApiOptions(
+        this.apiKey,
+        `/shards/${region}/players/${playerId}/seasons/lifetime`,
       );
       apiRequest(apiOptions, this.playerStatsCache, resolve, reject);
     });
