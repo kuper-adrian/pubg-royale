@@ -60,5 +60,8 @@ client.player({ name: 'JohnDoe' })
 ### 2.0.0
 * Support for new grouped PC regions "steam" and "kakao". Support for console regions dropped for now.
 
+### 2.1.0
+* added `lifetimeStats()` which can be used to fetch lifetime stats of a player
+
 ## License
 MIT

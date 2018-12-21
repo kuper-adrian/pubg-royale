@@ -1,6 +1,6 @@
 {
   "name": "pubg-royale",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A pubg api wrapper with built-in caching",
   "main": "index.js",
   "scripts": {
