@@ -63,5 +63,8 @@ client.player({ name: 'JohnDoe' })
 ### 2.1.0
 * added `lifetimeStats()` which can be used to fetch lifetime stats of a player
 
+### 2.1.1
+* Security updates
+
 ## License
 MIT
